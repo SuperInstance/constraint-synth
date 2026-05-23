@@ -96,17 +96,23 @@ class SchroederReverb:
 
 
 class ConstraintSynth:
-    """Lattice oscillator + funnel envelope + consonance filter."""
+    """Lattice oscillator + funnel envelope + consonance filter + lowpass + reverb."""
 
     def __init__(
         self,
         oscillator: LatticeOscillator | None = None,
         envelope: FunnelEnvelope | None = None,
         filter: ConsonanceFilter | None = None,
+        filter_cutoff: float = 2000.0,
+        reverb_wet: float = 0.3,
     ):
         self.oscillator = oscillator or LatticeOscillator()
         self.envelope = envelope or FunnelEnvelope()
         self.filter = filter
+        self._lowpass = BiquadLowpass(filter_cutoff, self.oscillator.sample_rate)
+        self._reverb = SchroederReverb(self.oscillator.sample_rate, wet=reverb_wet)
+        self.filter_cutoff = filter_cutoff
+        self.reverb_wet = reverb_wet
 
     def play_note(self, pitch: int, velocity: int, duration: float) -> np.ndarray:
         """Generate a single note from MIDI parameters."""
@@ -121,7 +127,68 @@ class ConstraintSynth:
         if self.filter is not None:
             signal = self.filter.apply(signal, freq, self.oscillator.sample_rate)
 
+        # Apply lowpass filter
+        if self.filter_cutoff > 0:
+            signal = self._lowpass.process(signal)
+
+        # Apply reverb
+        if self.reverb_wet > 0:
+            signal = self._reverb.process(signal)
+
         return signal
+
+    # ------------------------------------------------------------------
+    # Presets
+    # ------------------------------------------------------------------
+    PRESETS = {
+        "bop_sax": dict(
+            oscillator=dict(lattice_shape="saw", lattice_stretch=1.0, use_polyblep=True),
+            envelope=dict(attack=0.005, decay=0.08, sustain=0.75, release=0.15, hold=0.0),
+            consonance_filter=dict(cutoff=0.5, resonance=1.0),
+            filter_cutoff=3500.0,
+            reverb_wet=0.2,
+        ),
+        "blues_guitar": dict(
+            oscillator=dict(lattice_shape="square", lattice_stretch=1.0, noise_floor=0.02),
+            envelope=dict(attack=0.02, decay=0.15, sustain=0.6, release=0.4, hold=0.0),
+            consonance_filter=dict(cutoff=0.4, resonance=1.2),
+            filter_cutoff=1800.0,
+            reverb_wet=0.45,
+        ),
+        "techno_bass": dict(
+            oscillator=dict(lattice_shape="saw", lattice_stretch=1.0),
+            envelope=dict(attack=0.001, decay=0.3, sustain=0.0, release=0.1, hold=0.0),
+            consonance_filter=None,
+            filter_cutoff=800.0,
+            reverb_wet=0.0,
+        ),
+        "piano_ballad": dict(
+            oscillator=dict(lattice_shape="triangle", lattice_stretch=1.002),
+            envelope=dict(attack=0.008, decay=0.5, sustain=0.4, release=0.8, hold=0.0),
+            consonance_filter=dict(cutoff=0.6, resonance=0.8),
+            filter_cutoff=4000.0,
+            reverb_wet=0.5,
+        ),
+        "808_kick": dict(
+            oscillator=dict(lattice_shape="sine", lattice_stretch=1.0),
+            envelope=dict(attack=0.001, decay=0.0, sustain=1.0, release=0.35, hold=0.0),
+            consonance_filter=None,
+            filter_cutoff=400.0,
+            reverb_wet=0.0,
+        ),
+    }
+
+    @classmethod
+    def from_preset(cls, name: str) -> "ConstraintSynth":
+        """Create a ConstraintSynth from a named preset."""
+        if name not in cls.PRESETS:
+            raise ValueError(f"Unknown preset '{name}'. Available: {list(cls.PRESETS)}")
+        cfg = cls.PRESETS[name]
+        osc = LatticeOscillator(**cfg["oscillator"])
+        env = FunnelEnvelope(**cfg["envelope"])
+        filt = ConsonanceFilter(**cfg["consonance_filter"]) if cfg.get("consonance_filter") else None
+        return cls(oscillator=osc, envelope=env, filter=filt,
+                   filter_cutoff=cfg["filter_cutoff"], reverb_wet=cfg["reverb_wet"])
 
     @staticmethod
     def _crossfade(tail: np.ndarray, head: np.ndarray, samples: int = 64) -> tuple[np.ndarray, np.ndarray]:
