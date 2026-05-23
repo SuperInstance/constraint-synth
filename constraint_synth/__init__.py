@@ -4,5 +4,14 @@ from .oscillator import LatticeOscillator
 from .envelope import FunnelEnvelope
 from .constraint_filter import ConsonanceFilter
 from .synth import ConstraintSynth
+from .playback import AudioPlayer
+from .midi_renderer import MIDIRenderer
 
-__all__ = ["LatticeOscillator", "FunnelEnvelope", "ConsonanceFilter", "ConstraintSynth"]
+__all__ = [
+    "LatticeOscillator",
+    "FunnelEnvelope",
+    "ConsonanceFilter",
+    "ConstraintSynth",
+    "AudioPlayer",
+    "MIDIRenderer",
+]

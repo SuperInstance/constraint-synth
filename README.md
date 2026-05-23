@@ -1,35 +1,14 @@
-# Constraint Synthesizer Prototype
+# constraint-synth — Waveshape IS Lattice Geometry
 
-A proof-of-concept synthesizer where **waveshape IS lattice geometry**.
+A synthesizer where oscillator shapes aren't unrelated waveforms — they're all manifestations of lattice snapping. Sine = continuous, square = Z₂ binary snap, eisenstein = A₂ hexagonal tiling. Every dial has a lattice-theoretic interpretation.
 
-The core idea: instead of treating oscillator shapes as unrelated waveforms, they're all manifestations of lattice snapping — different geometries of the same underlying constraint-theory framework.
+## Install
 
-## Architecture
-
-```
-LatticeOscillator → FunnelEnvelope → ConsonanceFilter → WAV
+```bash
+pip install constraint-synth
 ```
 
-### LatticeOscillator
-Waveshape = lattice geometry:
-- **sine** — continuous manifold, no snapping
-- **square** — Z₂ snap (binary: ±1)
-- **saw** — ramp through Z lattice
-- **triangle** — A₁ snap
-- **eisenstein** — full A₂ hexagonal snap (6-level quantization)
-
-Parameters: `lattice_stretch` (inharmonicity), `noise_floor` (irreducible jitter), `snap_threshold` (soft/hard)
-
-### FunnelEnvelope
-ADSR as deadband funnel lifecycle:
-- **Attack** = convergence rate
-- **Hold** = suspension plateau
-- **Decay** = relaxation to pocket
-- **Sustain** = equilibrium epsilon
-- **Release** = divergence
-
-### ConsonanceFilter
-Filters by *interval quality* not frequency. Harmonics close to integer ratios with the fundamental pass through; dissonant partials get attenuated. `cutoff` controls the consonance threshold; `resonance` controls rolloff sharpness.
+Requires Python 3.10+, NumPy.
 
 ## Quick Start
 
@@ -44,9 +23,32 @@ signal = synth.play_note(pitch=60, velocity=100, duration=0.5)
 ConstraintSynth.to_wav(signal, "note.wav")
 ```
 
+## The Key Idea
+
+Traditional synthesizers treat waveshape as a menu of unrelated options. Constraint-synth unifies them: every waveform IS a lattice geometry. The oscillator snaps continuous phase to discrete lattice directions — different lattices produce different shapes. This isn't metaphor; it's the literal signal generation mechanism.
+
+This matters because it means every synthesizer parameter has a mathematical interpretation:
+- **Waveshape** = lattice geometry (Z₂, Z, A₂)
+- **Inharmonicity** = lattice stretching (Voronoi cell elongation)
+- **ADSR** = deadband funnel lifecycle (convergence → pocket → divergence)
+- **Filter cutoff** = consonance threshold (which lattice directions pass)
+- **Noise floor** = irreducible ε-jitter
+
+## Architecture
+
+```
+LatticeOscillator → FunnelEnvelope → ConsonanceFilter → Output (WAV/MIDI)
+```
+
+| Component | What it does | Constraint theory analogue |
+|-----------|-------------|--------------------------|
+| LatticeOscillator | Generate waveform via lattice snap | Snap to lattice directions |
+| FunnelEnvelope | ADSR shaped as deadband funnel | Convergence → pocket → divergence |
+| ConsonanceFilter | Filter by interval quality | Which lattice directions pass |
+
 ## Presets
 
-See `examples/demo_synth.py` for 5 named presets:
+Built-in presets demonstrating different lattice geometries:
 
 | Preset | Shape | Character |
 |--------|-------|-----------|
@@ -56,22 +58,72 @@ See `examples/demo_synth.py` for 5 named presets:
 | Coltrane Sax | saw + noise | Raw, breathy, no filter |
 | Aphex Glitch | eisenstein + noise | Harsh snap, fast everything |
 
-## Tests
+See `examples/demo_synth.py` for the full preset code.
 
-```bash
-cd constraint-synth
-pip install -e ".[dev]"
-pytest
+## API Reference
+
+### LatticeOscillator
+
+```python
+LatticeOscillator(
+    frequency=440.0,        # Hz
+    sample_rate=44100,      # samples/second
+    lattice_shape="sine",   # sine | square | saw | triangle | eisenstein
+    lattice_stretch=1.0,    # 1.0=harmonic, >1=inharmonic
+    noise_floor=0.0,        # 0-1, jitter that never converges
+    snap_threshold=1.0,     # 0=soft snap, 1=hard snap
+)
 ```
 
-## Why This Matters
+### FunnelEnvelope
 
-This isn't just a synth — it's a proof that constraint theory parameters map naturally to audio. Every dial on a traditional synthesizer has a lattice-theoretic interpretation:
+```python
+FunnelEnvelope(
+    attack=0.01,    # seconds
+    decay=0.1,      # seconds
+    sustain=0.7,    # 0-1 level
+    release=0.3,    # seconds
+)
+```
 
-- **Waveshape** = lattice geometry
-- **Inharmonicity** = lattice stretching (Voronoi cell elongation)
-- **ADSR** = deadband funnel lifecycle (convergence → pocket → divergence)
-- **Filter cutoff** = consonance threshold (which lattice directions pass)
-- **Noise floor** = irreducible ε-jitter
+### ConsonanceFilter
 
-The parameter atlas (85 dials) becomes a unified mathematical framework, not a bag of unrelated knobs.
+```python
+ConsonanceFilter(
+    cutoff=0.5,     # 0-1, harmonic cutoff
+    resonance=1.0,  # rolloff sharpness
+)
+```
+
+### ConstraintSynth
+
+```python
+ConstraintSynth(oscillator=None, envelope=None, filter=None)
+synth.play_note(pitch=60, velocity=100, duration=0.5) → np.ndarray
+synth.render_melody(melody, spacing=0.05) → np.ndarray
+ConstraintSynth.to_wav(signal, path, sample_rate=44100)
+```
+
+### MIDIRenderer
+
+```python
+MIDIRenderer(bpm=120)
+renderer.add_note(pitch, velocity, start_beat, duration_beats)
+renderer.render(output_path)
+```
+
+## Documentation
+
+- [User Guide](docs/USER-GUIDE.md) — Complete usage documentation
+- [Developer Guide](docs/DEVELOPER-GUIDE.md) — Contributing and internals
+- [Examples](examples/) — Working code with audio output
+
+## Related
+
+- [constraint-theory-core](https://github.com/SuperInstance/constraint-theory-core) — The mathematical primitives underneath
+- [flux-tensor-midi](https://github.com/SuperInstance/flux-tensor-midi) — 4D tensor representation of MIDI events
+- [constraint-viz](https://github.com/SuperInstance/constraint-viz) — Multi-scale constraint visualization
+
+## License
+
+Apache 2.0
