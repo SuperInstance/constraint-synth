@@ -38,15 +38,33 @@ class ConstraintSynth:
 
         return signal
 
+    @staticmethod
+    def _crossfade(tail: np.ndarray, head: np.ndarray, samples: int = 64) -> tuple[np.ndarray, np.ndarray]:
+        """Apply a short crossfade between the tail of one note and the head of the next."""
+        samples = min(samples, len(tail), len(head))
+        if samples <= 0:
+            return tail, head
+        fade_out = np.linspace(1, 0, samples)
+        fade_in = np.linspace(0, 1, samples)
+        tail[-samples:] *= fade_out
+        head[:samples] = (head[:samples] * fade_in) + (tail[-samples:] * (1 - fade_in))
+        return tail, head
+
     def render_melody(
         self,
         notes: list[tuple[int, int, float]],  # (pitch, velocity, duration)
         spacing: float = 0.05,
+        crossfade_samples: int = 64,
     ) -> np.ndarray:
         """Render a sequence of notes into a single audio buffer."""
         buffers: list[np.ndarray] = []
         for pitch, velocity, duration in notes:
             note = self.play_note(pitch, velocity, duration)
+            # Crossfade with previous note to avoid click artifacts at boundaries
+            if buffers and crossfade_samples > 0:
+                prev = buffers[-1]
+                prev, note = self._crossfade(prev, note, crossfade_samples)
+                buffers[-1] = prev
             buffers.append(note)
             if spacing > 0:
                 silence = np.zeros(int(self.oscillator.sample_rate * spacing))
