@@ -3,7 +3,7 @@
 from .oscillator import LatticeOscillator
 from .envelope import FunnelEnvelope
 from .constraint_filter import ConsonanceFilter
-from .synth import ConstraintSynth
+from .synth import ConstraintSynth, BiquadLowpass, SchroederReverb
 from .playback import AudioPlayer
 from .midi_renderer import MIDIRenderer
 
@@ -14,4 +14,6 @@ __all__ = [
     "ConstraintSynth",
     "AudioPlayer",
     "MIDIRenderer",
+    "BiquadLowpass",
+    "SchroederReverb",
 ]
