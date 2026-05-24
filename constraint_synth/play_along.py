@@ -44,6 +44,23 @@ SCALES = {
     "melodic_minor":   [0, 2, 3, 5, 7, 9, 11],
     "whole_tone":      [0, 2, 4, 6, 8, 10],
     "chromatic":       list(range(12)),
+    # Cross-cultural scales
+    "hijaz":           [0, 1, 4, 5, 7, 8, 11],       # Arabic maqam
+    "bayati":          [0, 1.5, 4, 5, 7, 8.5, 10],    # Arabic (quarter-tone)
+    "rast":            [0, 2, 3.5, 5, 7, 9, 10.5],     # Arabic (quarter-tone)
+    "bhairav":         [0, 1, 4, 5, 7, 8, 11],        # Indian raga
+    "bhairavi":        [0, 1, 3, 5, 7, 8, 10],        # Indian raga
+    "yaman":           [0, 2, 4, 6, 7, 9, 11],        # Indian raga
+    "kafi":            [0, 2, 3, 5, 7, 9, 10],        # Indian raga
+    "darbari":         [0, 2, 3, 5, 7, 8, 10],        # Indian raga (night)
+    "hirajoshi":       [0, 2, 3, 7, 8],               # Japanese
+    "in_scale":        [0, 1, 5, 7, 8],               # Japanese
+    "miyako_bushi":    [0, 1, 5, 7, 10],              # Japanese
+    "gong_mode":       [0, 2, 4, 7, 9],               # Chinese pentatonic
+    "hungarian_minor": [0, 2, 3, 6, 7, 8, 11],        # Eastern European
+    "phrygian":        [0, 1, 3, 5, 7, 8, 10],        # Mode 3
+    "lydian":          [0, 2, 4, 6, 7, 9, 11],        # Mode 5
+    "locrian":         [0, 1, 3, 5, 6, 8, 10],        # Mode 7
 }
 
 # Chord qualities (intervals from root)
