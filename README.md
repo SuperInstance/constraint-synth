@@ -40,25 +40,89 @@ This matters because it means every synthesizer parameter has a mathematical int
 LatticeOscillator → FunnelEnvelope → ConsonanceFilter → Output (WAV/MIDI)
 ```
 
+### High-Quality Mode (v0.2+)
+
+```
+UnisonOscillator → EnvelopeFollower → BiquadFilter → Chorus → Reverb → StereoWidth
+```
+
 | Component | What it does | Constraint theory analogue |
 |-----------|-------------|--------------------------|
 | LatticeOscillator | Generate waveform via lattice snap | Snap to lattice directions |
+| UnisonOscillator | Multiple detuned copies for warmth | Stochastic sampling of lattice |
 | FunnelEnvelope | ADSR shaped as deadband funnel | Convergence → pocket → divergence |
 | ConsonanceFilter | Filter by interval quality | Which lattice directions pass |
+| EnvelopeFollower | Velocity-sensitive filter modulation | ε varies with energy |
+| ChorusEffect | LFO-modulated delay voices | Temporal lattice interference |
+| StereoWidth | Haas-effect decorrelation | Spatial lattice dimensions |
 
 ## Presets
 
-Built-in presets demonstrating different lattice geometries:
+Built-in presets with full signal chain (unison + filter envelope + reverb + stereo):
 
-| Preset | Shape | Character |
-|--------|-------|-----------|
-| Bach Organ | triangle | Tight envelope, high consonance |
-| Joplin Piano | eisenstein | Piano-like stretch, moderate decay |
-| Debussy Pad | sine | Long attack/release, warm |
-| Coltrane Sax | saw + noise | Raw, breathy, no filter |
-| Aphex Glitch | eisenstein + noise | Harsh snap, fast everything |
+| Preset | Shape | Unison | Character |
+|--------|-------|--------|-----------|
+| bop_sax | saw | 1 voice | Raw, breathy, tight filter |
+| blues_guitar | square | 1 voice | Gritty, pitch transient, warm reverb |
+| techno_bass | saw | 3 voices | Sub-heavy, resonant filter sweep |
+| piano_ballad | triangle | 2 voices | Detuned warmth, long reverb |
+| 808_kick | sine | 1 voice | Pitch drop, tight envelope |
 
-See `examples/demo_synth.py` for the full preset code.
+```python
+synth = ConstraintSynth.from_preset("piano_ballad")
+audio = synth.play_note(pitch=60, velocity=100, duration=0.5)
+```
+
+## Play-Along Mode (v0.2+)
+
+AI reacts to your playing in real-time — analyzes key, tempo, density and generates scale-aware responses.
+
+```python
+from constraint_synth import PlayAlong, PlayAlongConfig, ResponseStrategy
+
+pa = PlayAlong(PlayAlongConfig(
+    key="C", mode="major",
+    strategy=ResponseStrategy.COMPLEMENT,
+    creativity=0.3,
+))
+
+# Feed your notes
+pa.feed(note=60, velocity=100, timestamp_ms=0)
+pa.feed(note=64, velocity=90, timestamp_ms=500)
+pa.feed(note=67, velocity=95, timestamp_ms=1000)
+
+# Get AI response
+responses = pa.respond()
+for r in responses:
+    print(f"{r.note_name} vel={r.velocity} @ {r.start_ms:.0f}ms")
+
+# Render to audio
+audio = pa.render_response(responses, preset="piano_ballad")
+ConstraintSynth.to_wav(audio, "response.wav")
+```
+
+### Strategies
+
+| Strategy | Description |
+|----------|------------|
+| COMPLEMENT | Fills gaps with scale tones that complement the harmony |
+| COUNTERPOINT | Contrary motion — moves opposite to input melody |
+| ECHO | Delayed repetition with pitch/timing variation |
+| BASS | Root motion and bass line from harmonic context |
+| CHORDAL | Block chords (triads) on strong beats |
+| FREE | Constraint-guided improvisation with creativity parameter |
+
+### Auto Mode
+
+```python
+# Auto-detect key and strategy from your playing
+pa = PlayAlong(PlayAlongConfig(
+    key="auto", mode="auto",
+    creativity=0.4,
+))
+```
+
+Uses Krumhansl-Schmuckler key detection and auto-selects strategy based on your playing density and tempo.
 
 ## API Reference
 
@@ -98,10 +162,33 @@ ConsonanceFilter(
 ### ConstraintSynth
 
 ```python
-ConstraintSynth(oscillator=None, envelope=None, filter=None)
+ConstraintSynth(oscillator=None, envelope=None, filter=None,
+                 filter_cutoff=2000.0, reverb_wet=0.3,
+                 pitch_envelope=None, filter_envelope=None,
+                 velocity_sensitivity=0.7,
+                 unison_voices=1, unison_detune_cents=0.0,
+                 stereo_width=0.0)
 synth.play_note(pitch=60, velocity=100, duration=0.5) → np.ndarray
 synth.render_melody(melody, spacing=0.05) → np.ndarray
 ConstraintSynth.to_wav(signal, path, sample_rate=44100)
+```
+
+### PlayAlong
+
+```python
+PlayAlong(PlayAlongConfig(
+    key="auto",              # "auto" or e.g. "C"
+    mode="auto",             # "auto" or scale name
+    strategy=ResponseStrategy.COMPLEMENT,
+    response_delay_ms=200.0,
+    creativity=0.3,          # 0=safe, 1=wild
+    octave_offset=-1,        # response below input
+    max_response_notes=4,
+))
+pa.feed(note=60, velocity=100, timestamp_ms=0)
+pa.respond() → List[ResponseEvent]
+pa.render_response(responses) → np.ndarray
+pa.get_status() → dict
 ```
 
 ### MIDIRenderer
