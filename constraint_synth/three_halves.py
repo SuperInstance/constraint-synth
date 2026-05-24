@@ -61,9 +61,12 @@ class MelodicNote:
         semitones = ratio_to_semitones(self.ratio)
         return 60 + round(semitones)
 
-    @property
-    def frequency(self, fundamental_hz: float = 440.0) -> float:
-        """Frequency in Hz."""
+    def frequency(self) -> float:
+        """Frequency in Hz (with A4=440 as fundamental for ratio=1/1)."""
+        return 440.0 * float(self.ratio)
+
+    def hz(self, fundamental_hz: float = 440.0) -> float:
+        """Frequency in Hz for a given fundamental."""
         return fundamental_hz * float(self.ratio)
 
 
@@ -218,7 +221,7 @@ class ThreeHalves:
 
             # Generate sine wave at this pitch
             t = np.linspace(0, duration_sec, duration_samples, endpoint=False)
-            freq = note.frequency(self.fundamental_hz)
+            freq = note.hz(261.63)  # C4 as fundamental
             wave = 0.5 * np.sin(2 * np.pi * freq * t)
 
             # Apply envelope to avoid clicks
@@ -380,8 +383,9 @@ class MeantoneSimulator:
 
             # Apply quarter-comma narrowing
             # Pure fifth is 3:2, narrowed by 1/4 syntonic comma
-            fifth_ratio = Fraction(3, 2) / (self.SYNTONIC_COMMA ** Fraction(1, 4))
-            current_ratio = current_ratio * fifth_ratio
+            # Fraction ** Fraction returns float, so compute in float then convert back
+            fifth_float = (3.0 / 2.0) / (81.0 / 80.0) ** 0.25
+            current_ratio = Fraction(current_ratio) * Fraction.from_float(fifth_float).limit_denominator(10000)
 
             # Normalize to within one octave
             while current_ratio >= 2:
@@ -621,7 +625,11 @@ class MeantoneSimulator:
 
     def _note_up(self, note: str, semitones: int) -> str:
         """Get the note name `semitones` above `note`."""
-        idx = (self.note_names.index(note.upper()) + semitones) % 12
+        note_upper = note.upper()
+        # Handle flat notation
+        if note_upper.endswith('B'):
+            note_upper = note_upper.replace('B', '#')
+        idx = (self.note_names.index(note_upper) + semitones) % 12
         return self.note_names[idx]
 
 
@@ -635,7 +643,6 @@ class NancarrowVoice:
     base_midi_pitch: int = 60  # Base pitch
     melody: list[int] = field(default_factory=list)  # MIDI notes
 
-    @property
     def tempo_bpm(self, fundamental_bpm: float = 120.0) -> float:
         """Calculate this voice's tempo in BPM."""
         return fundamental_bpm * float(self.tempo_ratio)
@@ -973,12 +980,15 @@ def demo_three_halves() -> None:
 
     print(f"Melody ({len(demo['melody'])} notes):")
     for i, note in enumerate(demo['melody']):
-        print(f"  {i+1}. Ratio {note.ratio:6s} = {ratio_to_cents(note.ratio):6.1f}¢ "
-              f"(MIDI {note.midi_pitch}), duration {note.duration}")
+        ratio_str = str(note.ratio).rjust(6)
+        duration_str = str(note.duration).rjust(6)
+        print(f"  {i+1}. Ratio {ratio_str} = {ratio_to_cents(note.ratio):6.1f}¢ "
+              f"(MIDI {note.midi_pitch}), duration {duration_str}")
 
     print(f"\nRhythm ({len(demo['rhythm'])} events):")
     for i, event in enumerate(demo['rhythm']):
-        print(f"  {i+1}. Duration {event.duration:6s} beats "
+        duration_str = str(event.duration).rjust(6)
+        print(f"  {i+1}. Duration {duration_str} beats "
               f"= {float(event.duration):.2f} beats")
 
     print(f"\n{demo['isomorphism_note']}")
@@ -989,7 +999,7 @@ def demo_three_halves() -> None:
     meantone = MeantoneSimulator(root="C")
 
     # Analyze a few keys
-    keys_to_analyze = ["C", "D", "G", "F#", "Bb"]
+    keys_to_analyze = ["C", "D", "G", "F#", "A#"]
     for key in keys_to_analyze:
         info = meantone.analyze_key(key)
         print(f"{key} major:")
@@ -1013,8 +1023,9 @@ def demo_three_halves() -> None:
 
     print("Voice tempo ratios:")
     for voice in study37.voices[:8]:  # Show first 8
-        print(f"  Voice {voice.voice_number:2d}: {voice.tempo_ratio:7s} "
-              f"= {voice.tempo_ratio:.4f} = {voice.tempo_bpm(study37.fundamental_bpm):.1f} BPM")
+        ratio_str = str(voice.tempo_ratio).rjust(7)
+        print(f"  Voice {voice.voice_number:2d}: {ratio_str} "
+              f"= {float(voice.tempo_ratio):.4f} = {voice.tempo_bpm(study37.fundamental_bpm):.1f} BPM")
 
     # Analyze temporal consonance
     analysis = study37.analyze_temporal_consonance(duration_beats=16.0)
