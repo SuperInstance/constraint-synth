@@ -6,6 +6,15 @@ from .constraint_filter import ConsonanceFilter
 from .synth import ConstraintSynth, BiquadLowpass, SchroederReverb
 from .playback import AudioPlayer
 from .midi_renderer import MIDIRenderer
+from .sound_engine import (
+    SoundEngine,
+    UnisonOscillator,
+    StereoWidth,
+    ChorusEffect,
+    EnvelopeFollower,
+    build_sound_engine,
+    HIGH_QUALITY_PRESETS,
+)
 
 __all__ = [
     "LatticeOscillator",
@@ -16,4 +25,11 @@ __all__ = [
     "MIDIRenderer",
     "BiquadLowpass",
     "SchroederReverb",
+    "SoundEngine",
+    "UnisonOscillator",
+    "StereoWidth",
+    "ChorusEffect",
+    "EnvelopeFollower",
+    "build_sound_engine",
+    "HIGH_QUALITY_PRESETS",
 ]

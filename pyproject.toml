@@ -1,7 +1,11 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "constraint-synth"
-version = "0.1.0"
-description = "Constraint-theory synthesizer prototype — waveshape as lattice geometry"
+version = "0.2.0"
+description = "Constraint-theory synthesizer — lattice geometry waveshaping, play-along AI, high-quality sound engine"
 requires-python = ">=3.10"
 dependencies = ["numpy>=1.24"]
 

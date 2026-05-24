@@ -113,10 +113,50 @@ class ConstraintSynth:
         self._reverb = SchroederReverb(self.oscillator.sample_rate, wet=reverb_wet)
         self.filter_cutoff = filter_cutoff
         self.reverb_wet = reverb_wet
+        self._sound_engine = None  # lazily created for quality="high"
 
-    def play_note(self, pitch: int, velocity: int, duration: float) -> np.ndarray:
-        """Generate a single note from MIDI parameters."""
-        # MIDI pitch → frequency
+    # ── High-quality mode ──────────────────────────────────────────
+
+    def _get_sound_engine(self):
+        """Lazily build a SoundEngine matching this synth's settings."""
+        if self._sound_engine is None:
+            from .sound_engine import (
+                SoundEngine,
+                UnisonOscillator,
+                EnvelopeFollower,
+                ChorusEffect,
+            )
+            self._sound_engine = SoundEngine(
+                unison=UnisonOscillator(
+                    base_oscillator=self.oscillator,
+                    voice_count=4,
+                    detune_cents=12.0,
+                    sample_rate=self.oscillator.sample_rate,
+                ),
+                envelope=self.envelope,
+                consonance_filter=self.filter,
+                env_follower=EnvelopeFollower(base_cutoff=self.filter_cutoff),
+                chorus=ChorusEffect(wet=0.3),
+                reverb=SchroederReverb(self.oscillator.sample_rate, wet=self.reverb_wet),
+                sample_rate=self.oscillator.sample_rate,
+            )
+        return self._sound_engine
+
+    def play_note(self, pitch: int, velocity: int, duration: float, *, quality: str = "standard") -> np.ndarray:
+        """Generate a single note from MIDI parameters.
+
+        Args:
+            pitch: MIDI note number (0-127).
+            velocity: MIDI velocity (0-127).
+            duration: Note length in seconds.
+            quality: "standard" (original mono path) or "high" (SoundEngine
+                     with unison, chorus, stereo, envelope-modulated filter).
+        """
+        if quality == "high":
+            engine = self._get_sound_engine()
+            return engine.play_note(pitch, velocity, duration)
+
+        # Original (standard) path — unchanged
         freq = 440.0 * (2 ** ((pitch - 69) / 12.0))
         self.oscillator.frequency = freq
 
