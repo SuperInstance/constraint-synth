@@ -15,6 +15,20 @@ from .sound_engine import (
     build_sound_engine,
     HIGH_QUALITY_PRESETS,
 )
+from .dawdreamer_backend import (
+    AudioBackend,
+    NumpyBackend,
+    DawDreamerBackend,
+    FAUSTGenerator,
+    ConstraintGraph,
+    ConstraintNode,
+    MIDIConstraintConfig,
+    MIDIConstraintTransformer,
+    create_backend,
+    render_scale,
+    render_all_scales,
+    generate_faust_scales,
+)
 
 __all__ = [
     "LatticeOscillator",
@@ -32,4 +46,17 @@ __all__ = [
     "EnvelopeFollower",
     "build_sound_engine",
     "HIGH_QUALITY_PRESETS",
+    # DawDreamer backend
+    "AudioBackend",
+    "NumpyBackend",
+    "DawDreamerBackend",
+    "FAUSTGenerator",
+    "ConstraintGraph",
+    "ConstraintNode",
+    "MIDIConstraintConfig",
+    "MIDIConstraintTransformer",
+    "create_backend",
+    "render_scale",
+    "render_all_scales",
+    "generate_faust_scales",
 ]
