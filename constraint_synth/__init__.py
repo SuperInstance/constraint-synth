@@ -70,6 +70,15 @@ from .neural import (
     DIAL_BRAIN_CORRELATION,
 )
 
+# v0.6.0: Quality DSP effects
+from .quality_effects import (
+    QualityChain,
+    QualityPreset,
+    generate_test_signal,
+    write_wav,
+    read_wav,
+)
+
 __all__ = [
     "LatticeOscillator",
     "FunnelEnvelope",
@@ -132,4 +141,10 @@ __all__ = [
     "predict_eeg",
     "adaptation_rate",
     "DIAL_BRAIN_CORRELATION",
+    # Quality DSP effects (v0.6.0)
+    "QualityChain",
+    "QualityPreset",
+    "generate_test_signal",
+    "write_wav",
+    "read_wav",
 ]
