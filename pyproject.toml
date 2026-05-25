@@ -12,5 +12,8 @@ dependencies = ["numpy>=1.24"]
 [project.optional-dependencies]
 dev = ["pytest>=7.0"]
 
+[tool.setuptools.packages.find]
+include = ["constraint_synth*"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
