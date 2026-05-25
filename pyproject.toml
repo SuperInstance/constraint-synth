@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "constraint-synth"
-version = "0.4.0"
+version = "0.5.0"
 description = "Constraint-theory synthesizer — lattice geometry waveshaping, play-along AI, 27 world scales, consonance field, just-intonation ratios"
 requires-python = ">=3.10"
 dependencies = ["numpy>=1.24"]
