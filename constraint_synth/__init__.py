@@ -70,6 +70,19 @@ from .neural import (
     DIAL_BRAIN_CORRELATION,
 )
 
+# v0.7.0: Harmony & Mutation
+from .harmony import (
+    HarmonicVoice,
+    Note,
+    HarmonicSequence,
+    HarmonicSynthesizer,
+)
+from .mutation import (
+    MutationConfig,
+    MutationResult,
+    ConstraintMutation,
+)
+
 # v0.6.0: Quality DSP effects
 from .quality_effects import (
     QualityChain,
@@ -141,6 +154,14 @@ __all__ = [
     "predict_eeg",
     "adaptation_rate",
     "DIAL_BRAIN_CORRELATION",
+    # Harmony & Mutation (v0.7.0)
+    "HarmonicVoice",
+    "Note",
+    "HarmonicSequence",
+    "HarmonicSynthesizer",
+    "MutationConfig",
+    "MutationResult",
+    "ConstraintMutation",
     # Quality DSP effects (v0.6.0)
     "QualityChain",
     "QualityPreset",
