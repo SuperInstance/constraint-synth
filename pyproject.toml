@@ -3,6 +3,7 @@ requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
+license = "MIT"
 name = "constraint-synth"
 version = "0.6.0"
 description = "Constraint-theory synthesizer — lattice geometry waveshaping, play-along AI, 27 world scales, consonance field, just-intonation ratios"
